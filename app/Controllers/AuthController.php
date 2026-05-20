@@ -12,7 +12,7 @@ class AuthController extends Controller
         if (session()->get('logged_in')) {
             return $this->redirectByRole(session()->get('role'));
         }
-        return view('auth/login');
+        return view('login');
     }
 
     public function doLogin()

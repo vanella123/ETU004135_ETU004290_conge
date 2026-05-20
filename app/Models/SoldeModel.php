@@ -43,17 +43,19 @@ class SoldeModel extends Model
     public function deduire(int $employeId, int $typeCongeId, int $nbJours, int $annee = null): bool
     {
         $annee = $annee ?? date('Y');
-        return $this->db->table('soldes')
+        return (bool) $this->db->table('soldes')
             ->where(['employe_id' => $employeId, 'type_conge_id' => $typeCongeId, 'annee' => $annee])
-            ->update(['jours_pris' => "jours_pris + $nbJours"], null, null);
+            ->set('jours_pris', "jours_pris + {$nbJours}", false)
+            ->update();
     }
 
     public function recréditer(int $employeId, int $typeCongeId, int $nbJours, int $annee = null): bool
     {
         $annee = $annee ?? date('Y');
-        return $this->db->table('soldes')
+        return (bool) $this->db->table('soldes')
             ->where(['employe_id' => $employeId, 'type_conge_id' => $typeCongeId, 'annee' => $annee])
-            ->update(['jours_pris' => "jours_pris - $nbJours"], null, null);
+            ->set('jours_pris', "jours_pris - {$nbJours}", false)
+            ->update();
     }
 
     public function getAllSoldesWithEmploye(int $annee = null): array

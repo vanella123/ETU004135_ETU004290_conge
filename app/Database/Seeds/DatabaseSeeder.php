@@ -84,18 +84,23 @@ class DatabaseSeeder extends Seeder
         $this->db->table('soldes')->insertBatch($soldes);
 
         // Demandes de congés
+        // IMPORTANT: insertBatch() exige exactement les mêmes clés pour chaque ligne.
         $conges = [
             [
                 'employe_id' => 3, 'type_conge_id' => 1,
                 'date_debut' => $annee . '-06-23', 'date_fin' => $annee . '-06-27',
                 'nb_jours' => 5, 'motif' => 'Vacances familiales',
-                'statut' => 'en_attente', 'created_at' => date('Y-m-d H:i:s'),
+                'statut' => 'en_attente',
+                'commentaire_rh' => null,
+                'created_at' => date('Y-m-d H:i:s'),
+                'traite_par' => null,
             ],
             [
                 'employe_id' => 3, 'type_conge_id' => 2,
                 'date_debut' => $annee . '-06-02', 'date_fin' => $annee . '-06-03',
                 'nb_jours' => 2, 'motif' => null,
-                'statut' => 'approuvee', 'commentaire_rh' => 'Validé',
+                'statut' => 'approuvee',
+                'commentaire_rh' => 'Validé',
                 'created_at' => date('Y-m-d H:i:s', strtotime('-18 days')),
                 'traite_par' => 2,
             ],
@@ -103,7 +108,8 @@ class DatabaseSeeder extends Seeder
                 'employe_id' => 3, 'type_conge_id' => 1,
                 'date_debut' => $annee . '-05-12', 'date_fin' => $annee . '-05-16',
                 'nb_jours' => 5, 'motif' => null,
-                'statut' => 'approuvee', 'commentaire_rh' => 'OK',
+                'statut' => 'approuvee',
+                'commentaire_rh' => 'OK',
                 'created_at' => date('Y-m-d H:i:s', strtotime('-38 days')),
                 'traite_par' => 2,
             ],
@@ -111,7 +117,8 @@ class DatabaseSeeder extends Seeder
                 'employe_id' => 3, 'type_conge_id' => 3,
                 'date_debut' => $annee . '-04-05', 'date_fin' => $annee . '-04-05',
                 'nb_jours' => 1, 'motif' => 'Événement personnel',
-                'statut' => 'refusee', 'commentaire_rh' => 'Chevauchement détecté',
+                'statut' => 'refusee',
+                'commentaire_rh' => 'Chevauchement détecté',
                 'created_at' => date('Y-m-d H:i:s', strtotime('-75 days')),
                 'traite_par' => 2,
             ],
@@ -119,20 +126,28 @@ class DatabaseSeeder extends Seeder
                 'employe_id' => 3, 'type_conge_id' => 4,
                 'date_debut' => $annee . '-03-10', 'date_fin' => $annee . '-03-12',
                 'nb_jours' => 3, 'motif' => null,
-                'statut' => 'annulee', 'commentaire_rh' => 'Annulé par l\'employé',
+                'statut' => 'annulee',
+                'commentaire_rh' => 'Annulé par l\'employé',
                 'created_at' => date('Y-m-d H:i:s', strtotime('-98 days')),
+                'traite_par' => null,
             ],
             [
                 'employe_id' => 4, 'type_conge_id' => 2,
                 'date_debut' => $annee . '-06-18', 'date_fin' => $annee . '-06-19',
                 'nb_jours' => 2, 'motif' => 'Maladie',
-                'statut' => 'en_attente', 'created_at' => date('Y-m-d H:i:s'),
+                'statut' => 'en_attente',
+                'commentaire_rh' => null,
+                'created_at' => date('Y-m-d H:i:s'),
+                'traite_par' => null,
             ],
             [
                 'employe_id' => 5, 'type_conge_id' => 1,
                 'date_debut' => $annee . '-06-30', 'date_fin' => $annee . '-07-04',
                 'nb_jours' => 5, 'motif' => 'Vacances',
-                'statut' => 'en_attente', 'created_at' => date('Y-m-d H:i:s'),
+                'statut' => 'en_attente',
+                'commentaire_rh' => null,
+                'created_at' => date('Y-m-d H:i:s'),
+                'traite_par' => null,
             ],
         ];
         $this->db->table('conges')->insertBatch($conges);

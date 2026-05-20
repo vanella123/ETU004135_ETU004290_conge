@@ -1,6 +1,21 @@
 <?= $this->extend('layouts/main') ?>
-<?= $this->section('content') ?>
 <?php helper('rh'); ?>
+
+<?= $this->section('styles') ?>
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+<style>
+  .fc{font-family:'DM Sans',sans-serif}
+  .fc .fc-toolbar-title{font-family:'Playfair Display',serif;color:var(--ink)}
+  .fc .fc-button{background:var(--white);color:var(--muted);border:1.5px solid var(--border);border-radius:8px}
+  .fc .fc-button:hover{border-color:var(--muted);color:var(--ink);background:var(--white)}
+  .fc .fc-button-primary:not(:disabled).fc-button-active{background:var(--mint);border-color:var(--forest);color:var(--forest)}
+  .fc .fc-today-button{background:var(--forest);border-color:var(--forest);color:var(--white)}
+  .fc .fc-today-button:hover{background:var(--forest2);border-color:var(--forest2)}
+  .fc .fc-daygrid-day.fc-day-today{background:var(--cream)}
+</style>
+<?= $this->endSection() ?>
+
+<?= $this->section('content') ?>
 
 <div class="app-wrap">
 <?= $this->include('employe/_sidebar') ?>
@@ -85,18 +100,13 @@
       <?php endif; ?>
     </div>
 
-    <!-- Vue calendrier hebdomadaire -->
+    <!-- Calendrier (FullCalendar) -->
     <div class="data-card" style="margin-bottom:1.5rem">
       <div class="data-card-head">
-        <h3><i class="bi bi-calendar-week" style="color:var(--forest);margin-right:5px"></i>Vue calendrier</h3>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button id="prev-week" class="btn-secondary" style="padding:5px 10px"><i class="bi bi-chevron-left"></i></button>
-          <span id="week-label" style="font-size:.82rem;color:var(--ink);font-weight:500;min-width:200px;text-align:center"></span>
-          <button id="next-week" class="btn-secondary" style="padding:5px 10px"><i class="bi bi-chevron-right"></i></button>
-        </div>
+        <h3><i class="bi bi-calendar-week" style="color:var(--forest);margin-right:5px"></i>Calendrier</h3>
       </div>
-      <div style="padding:1rem 1.25rem;overflow-x:auto">
-        <div id="calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;min-width:560px"></div>
+      <div style="padding:1rem 1.25rem">
+        <div id="calendar"></div>
       </div>
     </div>
 
@@ -105,68 +115,63 @@
 </div>
 </div>
 
+<?= $this->endSection() ?>
+
 <?= $this->section('scripts') ?>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 <script>
-// Données des congés approuvés / en attente
 const conges = <?= json_encode(array_map(fn($c) => [
+  'id'     => $c['id'],
   'debut'  => $c['date_debut'],
   'fin'    => $c['date_fin'],
   'statut' => $c['statut'],
   'type'   => $c['type_libelle'],
-], array_filter($conges, fn($c) => in_array($c['statut'], ['approuvee','en_attente'])))) ?>;
+], $conges ?? [])) ?>;
 
-const jours = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
-let weekOffset = 0;
-
-function getWeekStart(offset) {
-  const d = new Date();
-  const day = d.getDay() || 7;
-  d.setDate(d.getDate() - day + 1 + offset * 7);
-  d.setHours(0,0,0,0);
-  return d;
+function addDays(ymd, days) {
+  const d = new Date(ymd + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
 }
 
-function toYMD(d) { return d.toISOString().slice(0,10); }
-
-function isInConge(dateStr) {
-  return conges.find(c => dateStr >= c.debut && dateStr <= c.fin) || null;
+function colorsForStatut(statut) {
+  if (statut === 'approuvee') return { bg: 'var(--success-bg)', border: 'var(--success)', text: 'var(--success)' };
+  if (statut === 'en_attente') return { bg: 'var(--warn-bg)', border: 'var(--warn)', text: 'var(--warn)' };
+  if (statut === 'refusee') return { bg: 'var(--danger-bg)', border: 'var(--danger)', text: 'var(--danger)' };
+  return { bg: 'var(--cream)', border: 'var(--border)', text: 'var(--muted)' };
 }
 
-function render() {
-  const ws = getWeekStart(weekOffset);
-  const we = new Date(ws); we.setDate(we.getDate()+6);
-  const fmt = d => d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
-  document.getElementById('week-label').textContent = fmt(ws) + ' – ' + fmt(we);
+document.addEventListener('DOMContentLoaded', function () {
+  const calendarEl = document.getElementById('calendar');
+  if (!calendarEl) return;
 
-  const grid = document.getElementById('calendar-grid');
-  grid.innerHTML = '';
-  jours.forEach((j,i) => {
-    const d = new Date(ws); d.setDate(d.getDate()+i);
-    const ymd = toYMD(d);
-    const conge = isInConge(ymd);
-    const isToday = toYMD(new Date()) === ymd;
-    const isWe = i >= 5;
-    let bg = isWe ? '#f8f6f1' : 'var(--white)';
-    let border = isToday ? '2px solid var(--forest)' : '1px solid var(--border)';
-    let content = '';
-    if (conge) {
-      const col = conge.statut === 'approuvee' ? 'var(--success-bg)' : 'var(--warn-bg)';
-      const tcol = conge.statut === 'approuvee' ? 'var(--success)' : 'var(--warn)';
-      bg = col;
-      border = `1px solid ${tcol}`;
-      content = `<div style="font-size:.62rem;color:${tcol};font-weight:500;margin-top:4px">${conge.type}</div>`;
-    }
-    grid.innerHTML += `<div style="background:${bg};border:${border};border-radius:8px;padding:.6rem .4rem;text-align:center;min-height:72px">
-      <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">${j}</div>
-      <div style="font-family:'DM Mono',monospace;font-size:.9rem;font-weight:500;color:${isToday?'var(--forest)':'var(--ink)'}">${d.getDate()}</div>
-      ${content}
-    </div>`;
+  const events = conges.map(c => {
+    const col = colorsForStatut(c.statut);
+    return {
+      id: String(c.id),
+      title: c.type,
+      start: c.debut,
+      end: addDays(c.fin, 1),
+      allDay: true,
+      backgroundColor: col.bg,
+      borderColor: col.border,
+      textColor: col.text,
+    };
   });
-}
 
-document.getElementById('prev-week').onclick = () => { weekOffset--; render(); };
-document.getElementById('next-week').onclick = () => { weekOffset++; render(); };
-render();
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    locale: 'fr',
+    height: 'auto',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    },
+    events,
+  });
+
+  calendar.render();
+});
 </script>
-<?= $this->endSection() ?>
 <?= $this->endSection() ?>
